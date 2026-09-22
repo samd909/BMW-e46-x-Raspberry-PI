@@ -9,7 +9,9 @@ from PyQt6.QtWidgets import (
     QProgressBar,
 )
 from PyQt6.QtCore import pyqtSignal, Qt
-from config import COLOR_TOPBAR
+
+BG = "#000000"
+BMW_RED = "#E7222E"
 
 
 class TopBarNav(QWidget):
@@ -22,7 +24,12 @@ class TopBarNav(QWidget):
 
         self.setStyleSheet(f"""
             QWidget {{
-                background-color: {COLOR_TOPBAR};
+                background-color: {BG};
+            }}
+            QLabel {{
+                background: transparent;
+                background-color: transparent;
+                color: {BMW_RED};
             }}
         """)
 
@@ -30,31 +37,17 @@ class TopBarNav(QWidget):
         layout.setContentsMargins(20, 0, 20, 0)
         layout.setSpacing(8)
 
-        # -------------------------
-        # E46 Logo
-        # -------------------------
-        title_logo = QLabel("E46")
-        title_logo.setStyleSheet("""
-            QLabel {
-                color: white;
-                font-size: 20px;
-                font-weight: 700;
-                background: transparent;
-            }
-        """)
-
-        layout.addWidget(title_logo)
         layout.addStretch()
 
         # -------------------------
-        # Navigation (Engine in het midden = index 1)
+        # Navigation
         # -------------------------
         self.btn_group = QButtonGroup(self)
         self.btn_group.setExclusive(True)
 
         self.tabs = [
             ("Music", 0),
-            ("Engine", 1),  # Midden
+            ("Engine", 1),
             ("Maps", 2),
         ]
 
@@ -65,34 +58,34 @@ class TopBarNav(QWidget):
             btn.setMinimumWidth(68)
             btn.setMinimumHeight(40)
 
-            btn.setStyleSheet("""
-                QPushButton {
-                    color: #9da3ae;
+            btn.setStyleSheet(f"""
+                QPushButton {{
+                    color: {BMW_RED};
                     background: transparent;
                     border: none;
                     border-radius: 8px;
                     padding: 8px 16px;
                     margin: 0px;
                     font-size: 14px;
-                    font-weight: 500;
-                }
+                    font-weight: 700;
+                }}
 
-                QPushButton:hover {
-                    color: white;
-                    background-color: rgba(255, 255, 255, 0.06);
-                }
+                QPushButton:hover {{
+                    color: {BMW_RED};
+                    background-color: {BG};
+                    border: 1px solid {BMW_RED};
+                }}
 
-                QPushButton:checked {
-                    color: white;
-                    background-color: rgba(255, 255, 255, 0.10);
-                    font-weight: 600;
-                }
+                QPushButton:checked {{
+                    color: {BG};
+                    background-color: {BMW_RED};
+                    font-weight: 800;
+                }}
             """)
 
             self.btn_group.addButton(btn, index)
             layout.addWidget(btn)
 
-            # Engine Tab (Index 1) standaard als geselecteerd instellen
             if index == 1:
                 btn.setChecked(True)
 
@@ -104,12 +97,12 @@ class TopBarNav(QWidget):
         self.music_box = QFrame()
         self.music_box.setFixedSize(230, 44)
 
-        self.music_box.setStyleSheet("""
-            QFrame {
-                background-color: rgba(255, 255, 255, 0.06);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+        self.music_box.setStyleSheet(f"""
+            QFrame {{
+                background-color: {BG};
+                border: 1px solid {BMW_RED};
                 border-radius: 8px;
-            }
+            }}
         """)
 
         music_layout = QVBoxLayout(self.music_box)
@@ -117,24 +110,24 @@ class TopBarNav(QWidget):
         music_layout.setSpacing(1)
 
         self.music_title = QLabel("No music playing")
-        self.music_title.setStyleSheet("""
-            QLabel {
-                color: white;
+        self.music_title.setStyleSheet(f"""
+            QLabel {{
+                color: {BMW_RED};
                 font-size: 12px;
-                font-weight: 600;
+                font-weight: 700;
                 background: transparent;
                 border: none;
-            }
+            }}
         """)
 
         self.music_artist = QLabel("—")
-        self.music_artist.setStyleSheet("""
-            QLabel {
-                color: #8f96a3;
+        self.music_artist.setStyleSheet(f"""
+            QLabel {{
+                color: {BMW_RED};
                 font-size: 10px;
                 background: transparent;
                 border: none;
-            }
+            }}
         """)
 
         music_layout.addWidget(self.music_title)
@@ -146,17 +139,17 @@ class TopBarNav(QWidget):
         self.music_progress.setTextVisible(False)
         self.music_progress.setFixedHeight(3)
 
-        self.music_progress.setStyleSheet("""
-            QProgressBar {
-                background-color: #303030;
+        self.music_progress.setStyleSheet(f"""
+            QProgressBar {{
+                background-color: {BG};
                 border: none;
-                border-radius: 2px;
-            }
+                border-radius: 1px;
+            }}
 
-            QProgressBar::chunk {
-                background-color: #ffffff;
-                border-radius: 2px;
-            }
+            QProgressBar::chunk {{
+                background-color: {BMW_RED};
+                border-radius: 1px;
+            }}
         """)
 
         music_layout.addWidget(self.music_progress)
