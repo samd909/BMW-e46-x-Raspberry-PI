@@ -83,7 +83,12 @@ class KBusManager:
                 self.rx_queue.put(f"RX fout: {e}")
                 break
 
-    def send(self, payload, live=False):
+    def send(self, payload, live=False, repeat=1, interval=0.05):
+        """
+        Verstuur een K-Bus commando. 
+        repeat: aantal keer dat het commando achter elkaar wordt gestuurd (handig voor stroeve ramen).
+        interval: pauze in seconden tussen de herhalingen.
+        """
         try:
             data = frame_bytes(payload)
         except ValueError as e:
@@ -92,13 +97,21 @@ class KBusManager:
         if not self.ser or not live:
             return True, f"DEMO {data.hex(' ').upper()}"
         
-        if time.monotonic() - self.last_rx < 0.025:
-            return False, "BUS BEZET"
-        
-        try:
-            with self.lock:
-                self.ser.write(data)
-                self.ser.flush()
-            return True, f"TX {data.hex(' ').upper()}"
-        except Exception as e:
-            return False, f"TX fout: {e}"
+        results = []
+        for i in range(repeat):
+            if time.monotonic() - self.last_rx < 0.025:
+                # Korte pauze voordat we de bus proberen te claimen
+                time.sleep(0.025)
+            
+            try:
+                with self.lock:
+                    self.ser.write(data)
+                    self.ser.flush()
+                results.append(f"TX ({i+1}/{repeat}) {data.hex(' ').upper()}")
+            except Exception as e:
+                return False, f"TX fout: {e}"
+            
+            if i < repeat - 1:
+                time.sleep(interval)
+                
+        return True, " | ".join(results)

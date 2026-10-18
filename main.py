@@ -14,92 +14,93 @@ from PyQt6.QtGui import QFont
 
 from kbus_backend import KBusManager, GROUPS
 
-# Strict Black & BMW Red QSS Styling voor 1024x600 Touchscreen
+# Strict Black & BMW E46 Amber/Red Dashboard Styling
 BLACK_RED_STYLE = """
 QMainWindow, QWidget {
     background-color: #050505;
-    color: #e6e6e6;
+    color: #ff4400;
     font-family: 'DejaVu Sans', Arial, sans-serif;
 }
 QPushButton {
     background-color: #121212;
-    color: #e6e6e6;
-    border: 1px solid #2a0808;
+    color: #ff4400;
+    border: 1px solid #3d1200;
     border-radius: 5px;
-    padding: 6px;
-    font-size: 11px;
+    padding: 6px 12px;
+    min-height: 32px;
+    font-size: 12px;
     font-weight: bold;
 }
 QPushButton:hover {
-    background-color: #240a0a;
-    border-color: #cc0000;
+    background-color: #260c00;
+    border-color: #ff4400;
     color: #ffffff;
 }
 QPushButton:pressed {
-    background-color: #cc0000;
+    background-color: #ff4400;
     color: white;
 }
 QPushButton.accent {
-    background-color: #2c0000;
-    color: #ff3333;
-    border: 1px solid #cc0000;
+    background-color: #3d1200;
+    color: #ff6622;
+    border: 1px solid #ff4400;
 }
 QPushButton.accent:hover {
-    background-color: #cc0000;
+    background-color: #ff4400;
     color: white;
 }
 QWidget#panel {
     background-color: #0c0c0c;
-    border: 1px solid #220505;
-    border-radius: 6px;
+    border: 1px solid #2d0e00;
+    border-radius: 8px;
 }
 QLineEdit {
     background-color: #0f0f0f;
-    color: #e6e6e6;
-    border: 1px solid #2a0808;
-    border-radius: 4px;
-    padding: 6px;
+    color: #ff4400;
+    border: 1px solid #3d1200;
+    border-radius: 6px;
+    padding: 8px;
     font-size: 12px;
 }
 QTextEdit {
     background-color: #080808;
-    color: #ff6666;
-    border: 1px solid #2a0808;
-    border-radius: 4px;
+    color: #ff6622;
+    border: 1px solid #3d1200;
+    border-radius: 6px;
     font-family: monospace;
     font-size: 10px;
 }
 QSlider::groove:horizontal {
-    height: 5px;
+    height: 8px;
     background: #141414;
-    border-radius: 2px;
+    border-radius: 4px;
 }
 QSlider::sub-page:horizontal {
-    background: #cc0000;
-    border-radius: 2px;
+    background: #ff4400;
+    border-radius: 4px;
 }
 QSlider::handle:horizontal {
-    background: #e6e6e6;
-    width: 14px;
-    margin: -5px 0;
-    border-radius: 7px;
+    background: #ff4400;
+    width: 22px;
+    margin: -7px 0;
+    border-radius: 11px;
 }
 QCheckBox {
-    color: #e6e6e6;
-    spacing: 6px;
+    color: #ff4400;
+    spacing: 8px;
     font-weight: bold;
     font-size: 11px;
 }
 QCheckBox::indicator {
-    width: 16px;
-    height: 16px;
-    border: 1px solid #2a0808;
-    border-radius: 3px;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #3d1200;
+    border-radius: 4px;
     background: #0f0f0f;
 }
 QCheckBox::indicator:checked {
-    background: #cc0000;
-    border-color: #cc0000;
+    background: #ff4400;
+    border-color: #ff4400;
 }
 """
 
@@ -121,13 +122,11 @@ class E46Dashboard(QMainWindow):
 
         self.setWindowTitle("BMW E46 • 1024x600 Dashboard")
         
-        # STRIKT GEFIXED OP 1024x600
         self.setFixedSize(1024, 600)
         self.setStyleSheet(BLACK_RED_STYLE)
 
         self.init_ui()
         
-        # Achtergrond timers
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.poll_queue)
         self.timer.start(100)
@@ -141,37 +140,64 @@ class E46Dashboard(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(10, 6, 10, 6)
-        main_layout.setSpacing(4)
+        main_layout.setContentsMargins(12, 10, 12, 10)
+        main_layout.setSpacing(10)
 
-        # --- TOPBAR (COMPACT VOOR 600H) ---
+        # --- TOPBAR ---
         header = QHBoxLayout()
+        header.setContentsMargins(0, 0, 0, 0)
+        header.setSpacing(10)
         
+        # Links: Titel info
         title_layout = QVBoxLayout()
         title_layout.setSpacing(0)
         lbl_title = QLabel("BMW E46")
-        lbl_title.setFont(QFont("DejaVu Sans", 16, QFont.Weight.Bold))
-        lbl_sub = QLabel("N46 • K-BUS INFOTAINMENT")
-        lbl_sub.setStyleSheet("color: #883333; font-size: 9px;")
+        lbl_title.setFont(QFont("DejaVu Sans", 15, QFont.Weight.Bold))
+        lbl_sub = QLabel("N46 • K-BUS")
+        lbl_sub.setStyleSheet("color: #b33600; font-size: 9px;")
         title_layout.addWidget(lbl_title)
         title_layout.addWidget(lbl_sub)
         header.addLayout(title_layout)
 
-        header.addStretch()
+        header.addStretch(1)
 
+        # Midden: Navigatie Knoppen
+        nav_bar = QHBoxLayout()
+        nav_bar.setSpacing(6)
+
+        tabs = [
+            ("HOME", lambda: self.stack.setCurrentWidget(self.page_home)),
+            ("AUTO", lambda: self.stack.setCurrentWidget(self.page_auto)),
+            ("MEDIA", lambda: self.stack.setCurrentWidget(self.page_media)),
+            ("NAVI", lambda: self.stack.setCurrentWidget(self.page_navi)),
+            ("SETTINGS", lambda: self.stack.setCurrentWidget(self.page_settings)),
+        ]
+
+        for name, callback in tabs:
+            btn = QPushButton(name)
+            btn.setFixedHeight(34)
+            btn.setMinimumWidth(75)
+            btn.clicked.connect(callback)
+            nav_bar.addWidget(btn)
+
+        header.addLayout(nav_bar)
+        header.addStretch(1)
+
+        # Rechts: Status & Klok
         right_header = QVBoxLayout()
         right_header.setSpacing(0)
         self.lbl_status = QLabel("○ K-BUS • DEMO")
-        self.lbl_status.setStyleSheet("color: #883333; font-size: 10px;")
+        self.lbl_status.setStyleSheet("color: #b33600; font-size: 10px;")
         self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignRight)
         
         self.lbl_clock = QLabel("--:--")
-        self.lbl_clock.setFont(QFont("DejaVu Sans", 16, QFont.Weight.Bold))
+        self.lbl_clock.setFont(QFont("DejaVu Sans", 14, QFont.Weight.Bold))
         self.lbl_clock.setAlignment(Qt.AlignmentFlag.AlignRight)
         
         right_header.addWidget(self.lbl_status)
         right_header.addWidget(self.lbl_clock)
         header.addLayout(right_header)
+        
         main_layout.addLayout(header)
 
         # --- PAGINA STACK ---
@@ -190,46 +216,23 @@ class E46Dashboard(QMainWindow):
         self.stack.addWidget(self.page_navi)
         self.stack.addWidget(self.page_settings)
 
-        # --- ONDERSTE NAVIGATIE BAR (TABS) ---
-        nav_bar = QHBoxLayout()
-        nav_bar.setSpacing(4)
-
-        tabs = [
-            ("HOME", lambda: self.stack.setCurrentWidget(self.page_home)),
-            ("AUTO", lambda: self.stack.setCurrentWidget(self.page_auto)),
-            ("MEDIA", lambda: self.stack.setCurrentWidget(self.page_media)),
-            ("NAVI", lambda: self.stack.setCurrentWidget(self.page_navi)),
-            ("SETTINGS", lambda: self.stack.setCurrentWidget(self.page_settings)),
-        ]
-
-        for name, callback in tabs:
-            btn = QPushButton(name)
-            btn.setFixedHeight(40)
-            btn.clicked.connect(callback)
-            nav_bar.addWidget(btn)
-
-        btn_exit = QLabel("X") # Minimalistisch exit knopje of tekst
-        btn_exit_btn = QPushButton("SLUIT")
-        btn_exit_btn.setFixedHeight(40)
-        btn_exit_btn.setProperty("class", "accent")
-        btn_exit_btn.clicked.connect(self.close)
-        nav_bar.addWidget(btn_exit_btn)
-
-        main_layout.addLayout(nav_bar)
-
     # --- TAB 1: HOME ---
     def create_home_page(self):
         page = QWidget()
         layout = QHBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
         
         # Links: Snelle controls
         left_panel = QWidget()
         left_panel.setObjectName("panel")
         left_layout = QVBoxLayout(left_panel)
+        left_layout.setContentsMargins(14, 14, 14, 14)
+        left_layout.setSpacing(10)
         left_layout.addWidget(QLabel("<b>SNELLE BEDIENING</b>"))
         
         grid = QGridLayout()
+        grid.setSpacing(10)
         grid.addWidget(QPushButton("RAAM L OPEN", clicked=lambda: self.send_cmd(*GROUPS['Ramen'][0])), 0, 0)
         grid.addWidget(QPushButton("RAAM L DICHT", clicked=lambda: self.send_cmd(*GROUPS['Ramen'][1])), 0, 1)
         grid.addWidget(QPushButton("RAAM R OPEN", clicked=lambda: self.send_cmd(*GROUPS['Ramen'][2])), 1, 0)
@@ -243,10 +246,12 @@ class E46Dashboard(QMainWindow):
         right_panel = QWidget()
         right_panel.setObjectName("panel")
         right_layout = QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(14, 14, 14, 14)
+        right_layout.setSpacing(10)
         right_layout.addWidget(QLabel("<b>MEDIA PREVIEW</b>"))
         
         self.lbl_play_status = QLabel("Gepauzeerd • Demo")
-        self.lbl_play_status.setStyleSheet("color: #883333;")
+        self.lbl_play_status.setStyleSheet("color: #b33600;")
         right_layout.addWidget(self.lbl_play_status)
         
         btn_box = QHBoxLayout()
@@ -262,12 +267,16 @@ class E46Dashboard(QMainWindow):
         page = QWidget()
         layout = QGridLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setHorizontalSpacing(12)
+        layout.setVerticalSpacing(12)
         
         row, col = 0, 0
         for group_name, cmds in GROUPS.items():
             box = QWidget()
             box.setObjectName("panel")
             box_layout = QVBoxLayout(box)
+            box_layout.setContentsMargins(12, 12, 12, 12)
+            box_layout.setSpacing(8)
             box_layout.addWidget(QLabel(f"<b>{group_name.upper()}</b>"))
             
             for name, payload, risk in cmds:
@@ -287,10 +296,12 @@ class E46Dashboard(QMainWindow):
         page = QWidget()
         page.setObjectName("panel")
         layout = QVBoxLayout(page)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         lbl_icon = QLabel("♫")
-        lbl_icon.setStyleSheet("color: #cc0000; font-size: 48px;")
+        lbl_icon.setStyleSheet("color: #ff4400; font-size: 52px;")
         lbl_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(lbl_icon)
 
@@ -300,6 +311,7 @@ class E46Dashboard(QMainWindow):
         layout.addWidget(lbl_title)
 
         vol_layout = QHBoxLayout()
+        vol_layout.setSpacing(15)
         vol_layout.addWidget(QLabel("Volume"))
         slider = QSlider(Qt.Orientation.Horizontal)
         slider.setRange(0, 100)
@@ -315,6 +327,8 @@ class E46Dashboard(QMainWindow):
         page = QWidget()
         page.setObjectName("panel")
         layout = QVBoxLayout(page)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         lbl = QLabel("Google Maps / Chromium Kiosk")
@@ -323,7 +337,7 @@ class E46Dashboard(QMainWindow):
 
         btn_map = QPushButton("OPEN GOOGLE MAPS FULLSCREEN")
         btn_map.setProperty("class", "accent")
-        btn_map.setFixedHeight(50)
+        btn_map.setFixedHeight(55)
         btn_map.clicked.connect(self.start_maps)
         layout.addWidget(btn_map)
 
@@ -334,11 +348,14 @@ class E46Dashboard(QMainWindow):
         page = QWidget()
         layout = QHBoxLayout(page)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
 
         # Links: Verbindingen & Log
         left_box = QWidget()
         left_box.setObjectName("panel")
         left = QVBoxLayout(left_box)
+        left.setContentsMargins(14, 14, 14, 14)
+        left.setSpacing(10)
         left.addWidget(QLabel("<b>K-BUS SERIEEL</b>"))
         
         self.port_input = QLineEdit(self.port)
@@ -362,6 +379,8 @@ class E46Dashboard(QMainWindow):
         right_box = QWidget()
         right_box.setObjectName("panel")
         right = QVBoxLayout(right_box)
+        right.setContentsMargins(14, 14, 14, 14)
+        right.setSpacing(10)
         right.addWidget(QLabel("<b>SYSTEEM INFO</b>"))
         right.addWidget(QLabel("Motortype: N46B20A"))
         right.addWidget(QLabel("ECU: Bosch MEV9"))
@@ -381,7 +400,10 @@ class E46Dashboard(QMainWindow):
             if dlg.exec() != QMessageBox.StandardButton.Yes:
                 return
 
-        success, msg = self.kbus.send(payload, live=self.live_tx)
+        # Als het om ramen gaat, sturen we het commando automatisch 2 keer achter elkaar
+        repeats = 2 if 'RAAM' in name.upper() else 1
+
+        success, msg = self.kbus.send(payload, live=self.live_tx, repeat=repeats)
         self.append_log(msg)
 
     def toggle_serial(self):
@@ -397,7 +419,7 @@ class E46Dashboard(QMainWindow):
                 self.append_log(f"Verbonden: {port}")
             except Exception as e:
                 QMessageBox.critical(self, "Fout", str(e))
-
+            
     def poll_queue(self):
         while not self.kbus.rx_queue.empty():
             item = self.kbus.rx_queue.get_nowait()
