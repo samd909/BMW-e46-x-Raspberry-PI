@@ -27,7 +27,7 @@ class MEV9Reader(QThread):
 
     def __init__(
         self,
-        port="/dev/ttyUSB0",
+        port="/dev/bmw-obd",
         parent=None
     ):
         super().__init__(parent)

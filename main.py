@@ -614,13 +614,39 @@ class E46Dashboard(QMainWindow):
             webbrowser.open(url)
             self.append_log("Google Maps geopend in browser")
 
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('--port', default='/dev/ttyUSB0', help='K-Bus serial port')
-    ap.add_argument('--obd-port', default='/dev/ttyUSB1', help='OBD2 MEV9 serial port')
-    ap.add_argument('--baud', type=int, default=9600)
+
+    ap.add_argument(
+        '--port',
+        default='/dev/bmw-ibus',
+        help='K-Bus serial port (default: /dev/bmw-ibus)'
+    )
+
+    ap.add_argument(
+        '--obd-port',
+        default='/dev/bmw-obd',
+        help='OBD2 MEV9 serial port (default: /dev/bmw-obd)'
+    )
+
+    ap.add_argument(
+        '--baud',
+        type=int,
+        default=9600,
+        help='Serial baud rate (default: 9600)'
+    )
+
     args = ap.parse_args()
+
     app = QApplication(sys.argv)
-    dash = E46Dashboard(args.port, args.obd_port, args.baud)
+
+    dash = E46Dashboard(
+        args.port,
+        args.obd_port,
+        args.baud
+    )
+
     dash.show()
+
     sys.exit(app.exec())
