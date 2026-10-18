@@ -122,11 +122,11 @@ class E46Dashboard(QMainWindow):
 
         self.setWindowTitle("BMW E46 • 1024x600 Dashboard")
         
-        self.setFixedSize(1024, 600)
         self.setStyleSheet(BLACK_RED_STYLE)
 
         self.init_ui()
-        
+        self.showFullScreen()
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.poll_queue)
         self.timer.start(100)
@@ -139,31 +139,51 @@ class E46Dashboard(QMainWindow):
     def init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(12, 10, 12, 10)
-        main_layout.setSpacing(10)
 
-        # --- TOPBAR ---
-        header = QHBoxLayout()
-        header.setContentsMargins(0, 0, 0, 0)
-        header.setSpacing(10)
-        
-        # Links: Titel info
+        # Hoofdindeling: 3% zwart, 25% topbar, 72% main page
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # --- BOVENSTE 3%: ZWARTE RUIMTE ---
+        top_black = QWidget()
+        top_black.setStyleSheet("background-color: #000000;")
+        main_layout.addWidget(top_black, 3)
+
+        # --- TOPBAR: 25% ---
+        header_widget = QWidget()
+        header_widget.setStyleSheet("background-color: #050505;")
+
+        header = QHBoxLayout(header_widget)
+        header.setContentsMargins(18, 0, 18, 0)
+        header.setSpacing(16)
+
+        # Links: BMW titel
         title_layout = QVBoxLayout()
-        title_layout.setSpacing(0)
+        title_layout.setSpacing(2)
+
         lbl_title = QLabel("BMW E46")
-        lbl_title.setFont(QFont("DejaVu Sans", 15, QFont.Weight.Bold))
+        lbl_title.setFont(
+            QFont("DejaVu Sans", 23, QFont.Weight.Bold)
+        )
+
         lbl_sub = QLabel("N46 • K-BUS")
-        lbl_sub.setStyleSheet("color: #b33600; font-size: 9px;")
+        lbl_sub.setStyleSheet(
+            "color: #b33600; font-size: 14px;"
+        )
+
         title_layout.addWidget(lbl_title)
         title_layout.addWidget(lbl_sub)
-        header.addLayout(title_layout)
+        
+        title_container = QWidget()
+        title_container.setLayout(title_layout)
+        header.addWidget(title_container, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         header.addStretch(1)
 
-        # Midden: Navigatie Knoppen
+        # Midden: grotere navigatieknoppen
         nav_bar = QHBoxLayout()
-        nav_bar.setSpacing(6)
+        nav_bar.setSpacing(10)
 
         tabs = [
             ("HOME", lambda: self.stack.setCurrentWidget(self.page_home)),
@@ -175,35 +195,42 @@ class E46Dashboard(QMainWindow):
 
         for name, callback in tabs:
             btn = QPushButton(name)
-            btn.setFixedHeight(34)
-            btn.setMinimumWidth(75)
+            btn.setFixedSize(112, 58)
+            btn.setFont(QFont("DejaVu Sans", 13, QFont.Weight.Bold))
             btn.clicked.connect(callback)
             nav_bar.addWidget(btn)
 
-        header.addLayout(nav_bar)
+        nav_container = QWidget()
+        nav_container.setLayout(nav_bar)
+        header.addWidget(nav_container, alignment=Qt.AlignmentFlag.AlignVCenter)
         header.addStretch(1)
 
-        # Rechts: Status & Klok
+        # Rechts: alleen de grote klok
         right_header = QVBoxLayout()
         right_header.setSpacing(0)
-        self.lbl_status = QLabel("○ K-BUS • DEMO")
-        self.lbl_status.setStyleSheet("color: #b33600; font-size: 10px;")
-        self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignRight)
-        
+
         self.lbl_clock = QLabel("--:--")
-        self.lbl_clock.setFont(QFont("DejaVu Sans", 14, QFont.Weight.Bold))
-        self.lbl_clock.setAlignment(Qt.AlignmentFlag.AlignRight)
-        
-        right_header.addWidget(self.lbl_status)
+        self.lbl_clock.setFont(
+            QFont("DejaVu Sans", 28, QFont.Weight.Bold)
+        )
+        self.lbl_clock.setAlignment(
+            Qt.AlignmentFlag.AlignRight |
+            Qt.AlignmentFlag.AlignVCenter
+        )
+
         right_header.addWidget(self.lbl_clock)
-        header.addLayout(right_header)
         
-        main_layout.addLayout(header)
+        right_container = QWidget()
+        right_container.setLayout(right_header)
+        header.addWidget(right_container, alignment=Qt.AlignmentFlag.AlignVCenter)
 
-        # --- PAGINA STACK ---
+        main_layout.addWidget(header_widget, 25)
+
+        # --- MAIN PAGE: 72% ---
         self.stack = QStackedWidget()
-        main_layout.addWidget(self.stack, stretch=1)
+        main_layout.addWidget(self.stack, 72)
 
+        # Pagina's aanmaken
         self.page_home = self.create_home_page()
         self.page_auto = self.create_auto_page()
         self.page_media = self.create_media_page()
@@ -400,22 +427,18 @@ class E46Dashboard(QMainWindow):
             if dlg.exec() != QMessageBox.StandardButton.Yes:
                 return
 
-        # Als het om ramen gaat, sturen we het commando automatisch 2 keer achter elkaar
         repeats = 2 if 'RAAM' in name.upper() else 1
-
         success, msg = self.kbus.send(payload, live=self.live_tx, repeat=repeats)
         self.append_log(msg)
 
     def toggle_serial(self):
         if self.kbus.ser:
             self.kbus.close()
-            self.lbl_status.setText("○ K-BUS • VERBROKEN")
             self.append_log("K-Bus verbroken.")
         else:
             try:
                 port = self.port_input.text()
                 self.kbus.connect(port, self.baud)
-                self.lbl_status.setText(f"● K-BUS VERBONDEN")
                 self.append_log(f"Verbonden: {port}")
             except Exception as e:
                 QMessageBox.critical(self, "Fout", str(e))
